@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ASG 2</title>
+
+    <!-- Load external libraries -->
+    <script src="lib/cuon-matrix-cse160.js"></script>
+    <script src="lib/cuon-utils.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+    <script src="lib/webgl-utils.js"></script>
+    <script src="asg2.js"></script>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+      Please use a browser that supports "canvas"
+    </canvas>
+    <div>
+      <p><strong>Sloth Controls</strong> (drag mouse on canvas to rotate, Shift+Click to poke)</p>
+      <p id="fpsLabel">FPS: --</p>
+      <p id="statusLabel">Status: starting...</p>
+
+      <label>Global Y Rotation: <span id="globalYVal">0</span></label>
+      <input id="globalY" type="range" min="-180" max="180" value="0" />
+      <br />
+
+      <label>Global X Rotation: <span id="globalXVal">0</span></label>
+      <input id="globalX" type="range" min="-90" max="90" value="0" />
+      <br />
+
+      <label>Left Shoulder: <span id="leftShoulderVal">15</span></label>
+      <input id="leftShoulder" type="range" min="-70" max="70" value="15" />
+      <br />
+
+      <label>Left Elbow: <span id="leftElbowVal">-20</span></label>
+      <input id="leftElbow" type="range" min="-90" max="50" value="-20" />
+      <br />
+
+      <label>Left Wrist: <span id="leftWristVal">10</span></label>
+      <input id="leftWrist" type="range" min="-60" max="60" value="10" />
+      <br />
+
+      <label>Head Yaw: <span id="headYawVal">0</span></label>
+      <input id="headYaw" type="range" min="-45" max="45" value="0" />
+      <br />
+
+      <label>Tail Angle: <span id="tailAngleVal">0</span></label>
+      <input id="tailAngle" type="range" min="-40" max="40" value="0" />
+      <br />
+
+      <button id="animOn" type="button">Animation On</button>
+      <button id="animOff" type="button">Animation Off</button>
+      <br />
+      <button id="shoulderAnimOn" type="button">Shoulder Anim On</button>
+      <button id="shoulderAnimOff" type="button">Shoulder Anim Off</button>
+      <button id="elbowAnimOn" type="button">Elbow Anim On</button>
+      <button id="elbowAnimOff" type="button">Elbow Anim Off</button>
+    </div>
+  </body>
+</html>
