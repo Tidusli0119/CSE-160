@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CSE160 — Phong lighting world (asgn4)</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 16px;
+        background: #111;
+        color: #e8e8e8;
+      }
+      #hud {
+        max-width: 720px;
+        margin-bottom: 12px;
+        line-height: 1.45;
+      }
+      .lighting-panel {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        max-width: 940px;
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(120, 200, 230, 0.22);
+        border-radius: 10px;
+        background: rgba(18, 28, 38, 0.62);
+      }
+      .lighting-panel button {
+        color: #e8f6ff;
+        background: #20354a;
+        border: 1px solid rgba(160, 220, 255, 0.28);
+        border-radius: 6px;
+        padding: 5px 8px;
+        cursor: pointer;
+      }
+      .lighting-panel button.is-off {
+        color: #b8c3cc;
+        background: #2b2f35;
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .lighting-panel label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.82rem;
+      }
+      .lighting-panel input[type="range"] {
+        width: 120px;
+      }
+      .canvas-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .quest-hud {
+        position: absolute;
+        left: 50%;
+        top: 10px;
+        transform: translateX(-50%);
+        width: calc(100% - 24px);
+        z-index: 10;
+        font-size: 0.82rem;
+        line-height: 1.35;
+        text-align: center;
+        pointer-events: none;
+      }
+      .quest-hud-inner {
+        background: linear-gradient(
+          180deg,
+          rgba(12, 28, 38, 0.42),
+          rgba(8, 18, 28, 0.38)
+        );
+        border: 1px solid rgba(120, 230, 255, 0.28);
+        border-radius: 999px;
+        padding: 8px 20px 10px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+      }
+      .quest-title {
+        font-weight: 700;
+        color: #c4ffff;
+        letter-spacing: 0.04em;
+        margin: 0 0 4px 0;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        text-shadow: 0 0 10px rgba(0, 200, 255, 0.25);
+      }
+      .quest-body {
+        margin: 0 0 6px 0;
+        color: #dceef5;
+        max-width: 100%;
+      }
+      .quest-body .quest-count {
+        color: #7efff0;
+        font-weight: 600;
+      }
+      .quest-progress-track {
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.22);
+        overflow: hidden;
+        border: 1px solid rgba(80, 180, 200, 0.22);
+        max-width: 100%;
+      }
+      .quest-bar-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #1a9ebc, #5ef0ff, #a8ffff);
+        transition: width 0.25s ease;
+        box-shadow: 0 0 8px rgba(100, 240, 255, 0.35);
+      }
+      .quest-meta {
+        margin-top: 4px;
+        font-size: 0.72rem;
+        color: rgba(180, 210, 230, 0.85);
+      }
+      .quest-complete {
+        margin-top: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 120, 0.1);
+        border: 1px solid rgba(255, 230, 100, 0.22);
+        color: #ffffcc;
+        font-size: 0.76rem;
+      }
+      canvas {
+        display: block;
+        border: 1px solid #444;
+        cursor: grab;
+      }
+      canvas:active {
+        cursor: grabbing;
+      }
+      .hotkeys-hud {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        z-index: 10;
+        font-size: 0.72rem;
+        line-height: 1.35;
+        pointer-events: none;
+        max-width: min(340px, calc(100vw - 24px));
+      }
+      .hotkeys-hud-inner {
+        background: linear-gradient(165deg, rgba(18, 32, 42, 0.55), rgba(8, 16, 24, 0.5));
+        border: 1px solid rgba(120, 200, 230, 0.28);
+        border-radius: 10px;
+        padding: 10px 12px 10px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
+      }
+      .hotkeys-hud h2 {
+        margin: 0 0 6px 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        color: #9ee8ff;
+      }
+      .hotkeys-hud dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 3px 12px;
+        align-items: baseline;
+      }
+      .hotkeys-hud dt {
+        margin: 0;
+        text-align: right;
+      }
+      .hotkeys-hud dt kbd {
+        display: inline-block;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-family: ui-monospace, monospace;
+        font-size: 0.68rem;
+        color: #e8f6ff;
+      }
+      .hotkeys-hud dd {
+        margin: 0;
+        color: #c5dce8;
+      }
+    </style>
+  </head>
+
+  <body onload="main()">
+    <div id="hud"></div>
+    <div id="lighting-panel" class="lighting-panel" aria-label="Lighting controls">
+      <button id="toggle-lighting" type="button">Lighting: On</button>
+      <button id="toggle-normals" type="button">Normals: Off</button>
+      <button id="toggle-point-light" type="button">Point Light: On</button>
+      <button id="toggle-spot-light" type="button">Spot Light: On</button>
+      <button id="toggle-light-animation" type="button">Animate Point Light: On</button>
+      <label>Point light angle <input id="point-light-angle" type="range" min="0" max="360" value="35" /></label>
+      <label>Light X <input id="light-x" type="range" min="0" max="64" value="45" title="0–32 world units" /></label>
+      <label>Light Y <input id="light-y" type="range" min="0" max="24" value="13" title="0–12 world units" /></label>
+      <label>Light Z <input id="light-z" type="range" min="0" max="64" value="41" title="0–32 world units" /></label>
+      <label>R <input id="light-red" type="range" min="0" max="150" value="100" /></label>
+      <label>G <input id="light-green" type="range" min="0" max="150" value="95" /></label>
+      <label>B <input id="light-blue" type="range" min="0" max="150" value="75" /></label>
+    </div>
+    <div id="hotkeys-hud" class="hotkeys-hud" aria-label="Controls">
+      <div class="hotkeys-hud-inner">
+        <h2>Controls</h2>
+        <dl>
+          <dt><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></dt>
+          <dd>Walk around</dd>
+          <dt><kbd>Q</kbd> <kbd>E</kbd></dt>
+          <dd>Spin the view</dd>
+          <dt><kbd>Shift</kbd></dt>
+          <dd>Hold for a speed boost</dd>
+          <dt><kbd>Space</kbd></dt>
+          <dd>Add a block in front of you (only stacks to 4)</dd>
+          <dt><kbd>X</kbd></dt>
+          <dd>Delete the top block in front</dd>
+          <dt>Look</dt>
+          <dd>Click the 3D view and drag the mouse — Esc if the cursor gets stuck captured</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <div id="quest-hud" class="quest-hud">
+        <div class="quest-hud-inner">
+          <div id="quest-title" class="quest-title"></div>
+          <p id="quest-body" class="quest-body"></p>
+          <div class="quest-progress-track">
+            <div id="quest-bar-fill" class="quest-bar-fill"></div>
+          </div>
+          <div class="quest-meta"><span id="quest-pct">0</span>% complete</div>
+          <div id="quest-complete" class="quest-complete" style="display: none"></div>
+        </div>
+      </div>
+      <canvas id="webgl" width="800" height="600">Canvas not supported.</canvas>
+    </div>
+
+    <script src="lib/cuon-matrix-cse160.js?v=3"></script>
+    <script src="lib/webgl-utils.js?v=1"></script>
+    <script src="lib/webgl-debug.js?v=1"></script>
+    <script src="lib/cuon-utils.js?v=1"></script>
+    <script src="geometry/geometry.js?v=1"></script>
+    <script src="geometry/cube.js?v=1"></script>
+    <script src="camera.js?v=1"></script>
+    <script src="world.js?v=3"></script>
+    <script src="animal.js?v=1"></script>
+    <script src="asg4.js?v=3"></script>
+    <script>
+      window.addEventListener("error", function (ev) {
+        var hud = document.getElementById("hud");
+        if (!hud || typeof main !== "function") {
+          if (hud) {
+            hud.innerHTML =
+              '<p style="color:#ff8888">Failed to load scripts. Run a local server from the <strong>asgn4</strong> folder:<br><code>cd asgn4 && python3 -m http.server 8001</code><br>Then open <code>http://localhost:8001/asg4.html</code></p>';
+          }
+        }
+        if (ev && ev.message) console.error(ev.message, ev.filename, ev.lineno);
+      });
+    </script>
+  </body>
+</html>
